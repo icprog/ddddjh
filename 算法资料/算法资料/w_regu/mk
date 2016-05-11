@@ -1,0 +1,22 @@
+ORALIB=/usr/oracle/lib/libclntsh.so
+OCILIB=/data/users/osa/lib/liboodboci.a
+
+SYBASE=/usr/osa/sybase
+OSA=/data/users/osa
+LIB=$SYBASE/lib
+BLKLIB=$LIB/libblk.a
+SRVLIB=$LIB/libsrv.a
+SYBDBLIB=$LIB/libsybdb.a
+CTLIB=$LIB/libct.a
+CSLIB=$LIB/libcs.a
+COMNLIB=$LIB/libcomn.a
+INTLIB=$LIB/libintl.a
+NETSCKLIBS=$LIB/libtcl.a
+NETL1=$LIB/libinsck.a
+NETTLILIBS=$LIB/libtcl.a 
+NETL2=$LIB/libtli.a
+LIBOODB=$OSA/lib/liboodb.a
+LIBCOMM=$OSA/lib/libcomm.a
+LIBRTE=$OSA/lib/librte.a
+
+cxx -I. -I$ORACLE_HOME/rdbms/demo -I$ORACLE_HOME/network/public -I$ORACLE_HOME/rdbms/public -I$OSA/include -I$OSA/adm/osadb/schema/include -I$SYBASE/include -I$SYBASE/osadb/include -I/data/users/pwrflow/include -g  -o $1 $1.cxx -lpthreads -lmach -lc_r $BLKLIB $SRVLIB $CTLIB $CSLIB $COMNLIB $SYBDBLIB $NETSCKLIBS $NETTLILIBS $NETL1 -lm -lrt $LIBOODB $LIBCOMM $LIBRTE $ORALIB $OCILIB

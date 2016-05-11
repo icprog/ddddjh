@@ -1,0 +1,3 @@
+echo Making scd files...
+mk opf_init
+echo ok

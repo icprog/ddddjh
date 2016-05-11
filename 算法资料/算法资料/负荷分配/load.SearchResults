@@ -1,0 +1,19 @@
+---- max_p Matches (26 in 0 files) ----
+Load_dispatch.cxx:		max_p += fee_ave[i*10 + point_num[i]-1].out_power;
+Load_dispatch.cxx:	float max_price;
+Load_dispatch.cxx:	max_price = 0;
+Load_dispatch.cxx:		max_price = max(max_price, price_each[i]);
+Load_dispatch.cxx:		printf("jzid=%s price=%10f power=%10f max_price=%10f\n",fee_ave_bak[i*10].un_id,price_each[i],p_each[i],max_price);
+Load_dispatch.cxx:	edge_price = max_price;
+Load_dispatch.cxx:	max_edge_price = get_max_price();
+Load_dispatch.cxx:	float m_pload,m_max_p,m_min_p;
+Load_dispatch.cxx:	m_max_p = max_p;
+Load_dispatch.cxx:				m_max_p = m_max_p - fee_ave_bak[i*10+point_num_bak[i]-1].out_power;
+Load_dispatch.cxx:	if(m_pload <= m_max_p && m_pload >= m_min_p)
+Load_dispatch.cxx:		max_p = m_max_p;
+Load_dispatch.cxx:	else if(m_pload > m_max_p)
+Load_dispatch.cxx:		max_p = m_max_p;
+Load_dispatch.cxx:	max_p = 0.0;
+Load_dispatch.cxx:	//printf("max_p=%f,sd=%d\n",max_p,sd_id);
+Load_dispatch.cxx:	if(pload > max_p)
+Load_dispatch.cxx:	//printf("max_p=%f\n",max_p);

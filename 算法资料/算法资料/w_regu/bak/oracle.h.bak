@@ -1,0 +1,41 @@
+//fdb.h by Wang GT, 2003/08/04
+///////////////////////////////////////////////
+
+#ifndef __FDB_H__
+#define __FDB_H__
+
+#include"common.h"
+#include"tpsec.h"
+//////////////////////////////////////////////
+
+//function prototypes
+
+long inPerforation(struct linestr *lineData);
+
+void append_grpLineData(struct linestr *&lineData,char *group_id,long prnt);
+void bdry_remove(struct linestr *lineData,long prnt);
+
+void consoleMsg(char *msg);
+void consoleMsg(char *prog_id,char *msg);
+void consoleMsg(char *prog_id,char *prog_descr,char *msg,char *msg_xpln);
+
+void conn_oraServer(char *_oraServer,long prnt);
+void disconn_oraServer();
+
+void rtdb_oodbclose();
+void rtdb_oodbinit(char *bob,long prnt);
+void rtdb_oodbopen();
+void rtdb_oodbread();
+void rtdb_oodbuse();
+
+void printUsage();
+void sec_member(struct secstr *sp,long prnt); 
+
+void fdb_readDB(char *date,long prnt);
+void fdb_report(char *date,char *resfile,long prnt);
+
+void fdb_start(char *prj,long prnt);
+void fdb_writeDB(char *date,char *resfile,long prnt);
+///////////////////////////////////////////////////////
+
+#endif

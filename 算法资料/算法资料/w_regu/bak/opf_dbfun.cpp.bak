@@ -1,0 +1,1026 @@
+//opf_dbfun.cpp by Wang GT
+///////////////////////////////////////////
+
+#include"common.h"
+#include"opf.h"
+#include"opf_db.h"
+#include"opf_global.h"
+
+#include<dstruct.h>
+#include<oodbglobe.h>
+#include<oodb.h>
+#include<psbob.h>
+
+#include"psbobserve.h"
+////////////////////////////////////////////////////////////////////
+
+void OPF_write_sens(double **PBPG,long lineNum,long genrNum)
+{
+	printf("\n\nOPF_write_sens()...");
+
+        //1: init. and reading tables
+
+        opf_oodbinit();//1.1
+        printf("\n opf_oodbinit() ok");
+
+        opf_oodbopen();//1.2
+        printf("\n opf_oodbopen() ok");
+
+        opf_oodbuse();//1.3
+        printf("\n opf_oodbuse() ok");
+        ////////////////////////////////////////
+
+        //2: inserting sens records 
+
+	opf_insert_sens();
+	printf("\n opf_insert_sens() ok");
+	//////////////////////////////////////
+
+	//3: closing database
+
+        opf_oodbclose();
+        printf("\n opf_oodbclose() ok");
+	/////////////////////////////////////
+
+	return;
+}
+
+void OPF_write_sysInfo()
+{
+	printf("\n\nOPF_write_sysInfo()...");
+
+	//1: init. and reading tables
+
+	opf_oodbinit();//1.1
+        printf("\n opf_oodbinit() ok");
+
+        opf_oodbopen();//1.2
+        printf("\n opf_oodbopen() ok");
+
+        opf_oodbuse();//1.3
+        printf("\n opf_oodbuse() ok");
+
+	opf_oodbread();//1.4
+        printf("\n opf_oodbread() ok");
+	/////////////////////////////////////////////
+
+	//2: updating sys_state
+
+	opf_update_sys_state(long(0));
+	printf("\n opf_update_sys_state() ok");
+        ////////////////////////////////////////////////
+
+	//3: closing database
+
+        opf_oodbclose();
+        printf("\n opf_oodbclose() ok");
+        /////////////////////////////////////
+
+	return;
+}
+
+void OPF_write_sysInfo(struct sysstr sysInfo)
+{
+        printf("\n\nOPF_write_sysInfo()...");
+
+        //1: init. and reading tables
+
+        opf_oodbinit();//1.1
+        printf("\n opf_oodbinit() ok");
+
+        opf_oodbopen();//1.2
+        printf("\n opf_oodbopen() ok");
+
+        opf_oodbuse();//1.3
+        printf("\n opf_oodbuse() ok");
+	
+	opf_oodbread();//1.4
+	printf("\n opf_oodbread() ok");
+        ////////////////////////////////////////
+
+        //2: updating sys_state
+
+	sysInfo0=sysInfo; 
+        opf_update_sys_state(long(1));
+
+	printf("\n opf_update_sys_state() ok");
+        ////////////////////////////////////////////////
+
+        //3: closing database
+
+        opf_oodbclose();
+        printf("\n opf_oodbclose() ok");
+        /////////////////////////////////////
+
+        return;
+}
+
+void OPF_write_database()
+{
+	printf("\n\nOPF_write_database()...");
+
+        //1: init. and reading tables
+
+        opf_oodbinit();//1.1
+        printf("\n opf_oodbinit() ok");
+
+        opf_oodbopen();//1.2
+        printf("\n opf_oodbopen() ok");
+
+        opf_oodbuse();//1.3
+        printf("\n opf_oodbuse() ok");
+
+	opf_oodbread();//1.4
+	printf("\n opf_oodbread() ok");
+        ////////////////////////////////////////
+
+        //2: updating tables
+
+        opf_update_volt();//2.1
+	printf("\n\n update_volt() ok");
+
+        opf_update_flow_mon();//2.2
+        printf("\n update_flow_mon() ok");
+
+	opf_update_stat_info();//2.3
+        printf("\n update_stat_info() ok");
+
+	opf_update_sys_state();//2.4
+        printf("\n update_sys_state() ok");
+	//////////////////////////////////////////
+
+        //3: inserting records
+
+        opf_insert_flow_vio();//3.1
+	printf("\n\n insert_flow_vio() ok");
+
+        opf_insert_flow_vio2();//3.2
+        printf("\n insert_flow_vio2() ok");
+
+	opf_insert_uninc();//3.3
+        printf("\n insert_uninc() ok");
+	
+	opf_insert_xfmrinc();//3.4
+        printf("\n insert_xfmrinc() ok");
+
+	opf_insert_capainc();//3.5
+        printf("\n insert_capainc() ok");
+	//////////////////////////////////////////
+
+        //4: closing database
+
+        opf_oodbclose();
+        printf("\n opf_oodbclose() ok");
+        /////////////////////////////////
+
+	return;
+}
+
+void OPF_read_database()
+{
+	printf("\n\nOPF_read_database()...");
+
+	//1: init. and read tables
+
+	opf_oodbinit();//1.1
+	printf("\n opf_oodbinit() ok");
+
+        opf_oodbopen();//1.2
+	printf("\n opf_oodbopen() ok");
+
+        opf_oodbuse();//1.3
+	printf("\n opf_oodbuse() ok");
+
+        opf_oodbread();//1.4
+        printf("\n opf_oodbread() ok");
+	/////////////////////////////////////////////////////
+
+        //2: reading original data
+
+	//2.1 reading global
+
+	opf_read_global();
+	printf("\n opf_read_global() ok");
+	
+	//2.2 reading others
+
+	opf_read_capaData();
+	opf_read_genrData();
+	opf_read_groupData();
+        opf_read_lineData();
+        opf_read_nodeData();
+	opf_read_priceData();
+	opf_read_taptyData();
+        opf_read_voltData();
+        opf_read_xfmrData();
+        
+	printf("\n opf_read_data() ok");
+	////////////////////////////////////////
+
+	//3: closing database
+
+        opf_oodbclose();
+        printf("\n opf_oodbclose() ok");
+	///////////////////////////////////
+
+        return;
+}
+
+void opf_oodbinit()
+{
+	strcpy(sys_name,"realtime");
+        strcpy(bob_name,"opf");
+        strcpy(real_srv,getenv("MYSERVER"));
+
+        ret=oodbinit();
+	if(ret==OO_FAIL)
+	{ 
+		printf("\n\nError! --- %s: %ld",__FILE__,__LINE__); 
+		exit(0);
+	}//end if
+	/////////////////////////////////
+
+	return;
+}
+
+void opf_oodbopen()
+{
+	psbob_db_descr=(DB_DESCR *)malloc(sizeof(DB_DESCR));
+        if(psbob_db_descr==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+        ret=oodbopen("psbob",sys_name,bob_name,real_srv,W,psbob_db_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+	////////////////////////////////////////////////
+
+	return;
+}
+
+void opf_oodbuse()
+{
+	//1: psbob tables
+
+	oo_r_intrfc_lnseg_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("oo_r_intrfc_lnseg",psbob_db_descr,oo_r_intrfc_lnseg_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_oo_r_intrfc_lnseg=oodbget_recnum(oo_r_intrfc_lnseg_descr);
+        /////////////////////////////////////////////////////////////////
+
+        lnseg_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("lnseg",psbob_db_descr,lnseg_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_lnseg=oodbget_recnum(lnseg_descr);
+        //////////////////////////////////////////////////////
+
+        intrfc_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("intrfc",psbob_db_descr,intrfc_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_intrfc=oodbget_recnum(intrfc_descr);
+        /////////////////////////////////////////////////////
+
+        ln_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("ln",psbob_db_descr,ln_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_ln=oodbget_recnum(ln_descr);
+        ////////////////////////////////////////////////////
+
+        ld_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("ld",psbob_db_descr,ld_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_ld=oodbget_recnum(ld_descr);
+        //////////////////////////////////////////////////////////
+
+        xf_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("xf",psbob_db_descr,xf_descr);
+        if(ret== OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_xf=oodbget_recnum(xf_descr);
+        ////////////////////////////////////////////////////
+
+        un_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("un",psbob_db_descr,un_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_un=oodbget_recnum(un_descr);
+        /////////////////////////////////////////////////////
+
+        cp_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("cp",psbob_db_descr,cp_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_cp=oodbget_recnum(cp_descr);
+        /////////////////////////////////////////////////////
+
+        bs_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("bs",psbob_db_descr,bs_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_bs=oodbget_recnum(bs_descr);
+        ////////////////////////////////////////////////////////
+
+        tapty_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("tapty",psbob_db_descr,tapty_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_tapty=oodbget_recnum(tapty_descr);
+        /////////////////////////////////////////////////////////////////
+
+        kv_descr=(TB_DESCR *)malloc(sizeof(TB_DESCR));
+        ret=oodbuse("kv",psbob_db_descr,kv_descr);
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+
+        lv_kv=oodbget_recnum(kv_descr);
+        ////////////////////////////////////////////////////////////////
+
+	return;
+}
+
+void opf_oodbread()
+{
+	//1: reading psbob tables
+
+	oo_r_intrfc_lnseg=NULL;
+	if(lv_oo_r_intrfc_lnseg>0)
+	{
+		lv_aux=lv_oo_r_intrfc_lnseg;
+        	oo_r_intrfc_lnseg=(OO_R_INTRFC_LNSEG *)malloc(lv_aux*sizeof(OO_R_INTRFC_LNSEG));
+
+        	ret=oodbread_rp(oo_r_intrfc_lnseg,0,oo_r_intrfc_lnseg_descr,lv_aux,lv_aux*sizeof(OO_R_INTRFC_LNSEG));
+		if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	//////////////////////////////////////////////////////////////////
+
+        lnseg=NULL;
+	if(lv_lnseg>0)
+	{
+        	lnseg=(LNSEG *)malloc(lv_lnseg*sizeof(LNSEG));
+
+        	ret=oodbread_rp(lnseg,0,lnseg_descr,lv_lnseg,lv_lnseg*sizeof(LNSEG));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	/////////////////////////////////////////////////////////
+
+        intrfc=NULL;
+        if(lv_intrfc>0)
+	{
+		intrfc=(INTRFC *)malloc(lv_intrfc*sizeof(INTRFC));
+
+        	ret=oodbread_rp(intrfc,0,intrfc_descr,lv_intrfc,lv_intrfc*sizeof(INTRFC));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	////////////////////////////////////////////////////////////
+
+        kv=NULL;
+        if(lv_kv>0)
+	{
+		kv=(KV *)malloc(lv_kv*sizeof(KV));
+
+        	ret=oodbread_rp(kv,0,kv_descr,lv_kv,lv_kv*sizeof(KV));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	////////////////////////////////////////////////////
+
+        tapty=NULL;
+        if(lv_tapty>0)
+	{
+		tapty=(TAPTY *)malloc(lv_tapty*sizeof(TAPTY));
+
+        	ret=oodbread_rp(tapty,0,tapty_descr,lv_tapty,lv_tapty*sizeof(TAPTY));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	////////////////////////////////////////////////////
+
+        bs=NULL;
+        if(lv_bs>0)
+	{
+		bs=(BS *)malloc(lv_bs*sizeof(BS));
+
+        	ret=oodbread_rp(bs,0,bs_descr,lv_bs,lv_bs*sizeof(BS));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	//////////////////////////////////////////////////////////////////
+
+        cp=NULL;
+        if(lv_cp)
+	{
+		cp=(CP *)malloc(lv_cp*sizeof(CP));
+
+        	ret=oodbread_rp(cp,0,cp_descr,lv_cp,lv_cp*sizeof(CP));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	////////////////////////////////////////////////////////////////////////
+
+        un=NULL;
+        if(lv_un>0)
+	{
+		un=(UN *)malloc(lv_un*sizeof(UN));
+
+        	ret=oodbread_rp(un,0,un_descr,lv_un,lv_un*sizeof(UN));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	//////////////////////////////////////////////////////////////////////
+
+        ln=NULL;
+        if(lv_ln>0)
+	{
+		ln=(LN *)malloc(lv_ln*sizeof(LN));
+
+        	ret=oodbread_rp(ln,0,ln_descr,lv_ln,lv_ln*sizeof(LN));
+        	if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        }
+	//////////////////////////////////////////////////////////////////////
+
+        ld=NULL;
+        ld=(LD *)malloc(lv_ld*sizeof(LD));
+
+        ret=oodbread_rp(ld,0,ld_descr,lv_ld,lv_ld*sizeof(LD));
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        ///////////////////////////////////////////////////////////////////
+
+        xf=NULL;
+        xf=(XF *)malloc(lv_xf*sizeof(XF));
+
+        ret=oodbread_rp(xf,0,xf_descr,lv_xf,lv_xf*sizeof(XF));
+        if(ret==OO_FAIL){ printf("\n\nError! --- %ld",__LINE__); exit(0); }
+        ////////////////////////////////////////////////////////////////////////
+
+	return;
+}
+
+void opf_read_lineData()
+{
+	register long i;
+	
+	long iopen,zopen;
+	double aux2,aux4;
+
+	struct linestr *lp;
+	/////////////////////////////////
+
+	//1: reading data from ln
+
+        lineData=NULL;
+        for(i=0;i<lv_ln;i++)//ln
+        {
+                if((bs+(ln+i)->ibs)->iisland!=opf_island) continue;
+                if((bs+(ln+i)->zbs)->iisland!=opf_island) continue;
+
+                iopen=(ln+i)->topflags & LN_IOPEN;
+                zopen=(ln+i)->topflags & LN_ZOPEN;
+
+                if(iopen && zopen) continue;//both open
+                if((ln+i)->topflags & LN_DEAD) continue;
+                ///////////////////////////////////////////////////
+
+                lp=(struct linestr *)malloc(sizeof(struct linestr));
+                if(lp==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(lp->descr,(ln+i)->descr);
+                strcpy(lp->id,(ln+i)->id);
+
+                strcpy(lp->st,(ln+i)->st);
+                strcpy(lp->zst,(ln+i)->zst);
+
+                lp->i   =(ln+i)->ibs;
+                lp->j   =(ln+i)->zbs;
+
+                lp->r   =(ln+i)->r;
+                lp->x   =(ln+i)->x;
+                lp->b0k =(ln+i)->bch/2.0;
+                /////////////////////////////////////
+
+                lp->lmt=(ln+i)->lmtlong;
+                lp->vl =(kv+(bs+(ln+i)->ibs)->ikv)->vl;
+
+                lp->next=lineData;
+                lineData=lp;
+        }//end for
+        ////////////////////////////////////////////
+
+        //2: reading data from xf
+
+        for(i=0;i<lv_xf;i++)
+        {
+                if((bs+(xf+i)->ibs)->iisland!=opf_island) continue;
+                if((bs+(xf+i)->zbs)->iisland!=opf_island) continue;
+
+                iopen=(xf+i)->topflags & XF_IOPEN;
+                zopen=(xf+i)->topflags & XF_ZOPEN;
+
+                if(iopen && zopen) continue;//both open
+                if((xf+i)->topflags & XF_DEAD) continue;
+                ////////////////////////////////////////////////////
+
+                lp=(struct linestr *)malloc(sizeof(struct linestr));
+                if(lp==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(lp->descr,(xf+i)->descr);
+                strcpy(lp->id,(xf+i)->id);
+
+                strcpy(lp->st,(xf+i)->st);
+                strcpy(lp->zst,"");
+
+                lp->i   =-(xf+i)->ibs;
+                lp->j   =(xf+i)->zbs;
+
+                lp->r   =(xf+i)->r;
+                lp->x   =(xf+i)->x;
+                lp->b0k =(xf+i)->t;//No Change!
+                /////////////////////////////////////////////
+
+                aux2=(kv+(bs+(xf+i)->ibs)->ikv)->vl;
+                aux4=(kv+(bs+(xf+i)->zbs)->ikv)->vl;
+
+                lp->lmt = (xf+i)->lmtlong;
+                lp->vl  = max(aux2,aux4);
+               //////////////////////////////////////////
+
+                lp->next=lineData;
+                lineData=lp;
+        }//end for
+        //////////////////////////////////////
+
+	turnOver(lineData);
+	return;
+}
+
+void opf_read_nodeData()
+{
+        register long i;
+
+	double genr_volt,genr_powr;
+        double puf;//plant-use factor
+
+        nodeData=NULL;
+        struct nodestr *np;
+        /////////////////////////////////////////
+
+        //5.3.1 generator nodes
+
+        for(i=0;i<lv_un;i++)//scanning un table
+        {
+                if((bs+(un+i)->ibs)->iisland!=opf_island) continue;
+                if((un+i)->q & UN_OPEN) continue;
+                if((un+i)->topflags & UN_DEAD) continue;
+                //////////////////////////////////////////////////
+
+                np=(struct nodestr *)malloc(sizeof(struct nodestr));
+                if(np==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(np->descr,(un+i)->descr);
+                strcpy(np->id,(un+i)->id);
+                np->i=(un+i)->ibs;
+
+                puf=(un+i)->percent3/100.0;
+                genr_powr=(un+i)->w*(1.0-puf);
+
+                genr_volt=(un+i)->vtarget;
+                if(genr_volt<SMLL) genr_volt=1.0;
+                ////////////////////////////////////////
+
+                if((un+i)->slackun==1)
+                {
+                        np->attr=SLACK;
+                        np->p   =genr_volt;
+                        np->qv  =0.0;//default
+                }
+                else//other generators
+                {
+                        np->attr=PV;
+                        np->p   =genr_powr;
+                        np->qv  =genr_volt;
+
+                }//end if-else
+
+                np->next=nodeData;
+                nodeData=np;
+        }//end for
+        ////////////////////////////////////////////////
+
+        //5.3.2 load nodes
+
+        for(i=0;i<lv_ld;i++)//scanning ld table
+        {
+                if((bs+(ld+i)->ibs)->iisland!=opf_island) continue;
+                if((ld+i)->q & LD_OPEN) continue;
+                if((ld+i)->topflags & LD_DEAD) continue;
+                //////////////////////////////////////////
+
+                np=(struct nodestr *)malloc(sizeof(struct nodestr));
+                if(np==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(np->descr,(ld+i)->descr);
+                strcpy(np->id,(ld+i)->id);
+
+                np->i   =(ld+i)->ibs;
+                np->attr=PQ;
+                np->p   =(ld+i)->w;
+                np->q   =(ld+i)->r;
+
+                np->next=nodeData;
+                nodeData=np;
+        }//end for
+        ////////////////////////////////////////////////
+
+        //5.3.3 noavr capacitors
+
+        for(i=0;i<lv_cp;i++)//scanning cp table
+        {
+                if((bs+(cp+i)->ibs)->iisland!=opf_island) continue;
+                if((cp+i)->topflags & CP_DEAD) continue;
+
+                if((cp+i)->q & CP_OPEN) continue;
+                if((cp+i)->q & CP_AVR) continue;
+                ////////////////////////////////////////
+
+                np=(struct nodestr *)malloc(sizeof(struct nodestr));
+                np=(struct nodestr *)malloc(sizeof(struct nodestr));
+                if(np==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(np->descr,(cp+i)->descr);
+                strcpy(np->id,(cp+i)->id);
+
+                np->i   =(cp+i)->ibs;
+                np->attr=PQ;
+                np->p   =0.0;
+                np->q   =-(cp+i)->r;
+
+                np->next=nodeData;
+                nodeData=np;
+        }//end for
+	/////////////////////////////////////////////
+
+	turnOver(nodeData);
+	return;
+}
+
+void opf_read_genrData()
+{
+	register long i;
+
+	double puf,vl;
+	struct genrstr *gp;
+	////////////////////////////
+
+	genrData=NULL;
+	for(i=0;i<lv_un;i++)
+	{
+		if((bs+(un+i)->ibs)->iisland!=opf_island) continue;
+                if((un+i)->topflags & UN_DEAD) continue;
+	
+		if((un+i)->q & UN_OPEN) continue;	
+		if((un+i)->q & UN_NOAVR) continue;	
+		//////////////////////////////////////////////////
+
+		gp=(struct genrstr *)malloc(sizeof(struct genrstr));
+		if(gp==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+		strcpy(gp->descr,(un+i)->descr);
+		strcpy(gp->id,(un+i)->id);
+		
+		puf=(un+i)->percent3/100.0;
+		vl=(kv+(bs+(un+i)->ibs)->ikv)->vl;
+	
+		gp->i    =(un+i)->ibs;
+		gp->puf  =puf;//plant-use factor
+
+		gp->Pmin =(un+i)->wmn*(1.0-puf);
+		gp->Pmax =(un+i)->wmx*(1.0-puf);
+		
+		gp->Qmin =(un+i)->rmn*(1.0-puf);
+		gp->Qmax =(un+i)->rmx*(1.0-puf);
+
+		gp->Vmin =(un+i)->vmn/vl;
+		gp->Vmax =(un+i)->vmx/vl;
+
+		gp->P0  =0.0;//init.
+		gp->Pc  =0.0;
+		gp->Q0  =0.0;
+		gp->V0  =0.0;
+
+		gp->rampUp=0.0;
+		gp->rampDn=0.0;
+
+		gp->next=genrData;
+                genrData=gp;
+	}//end for
+	////////////////////////////////
+
+	turnOver(genrData);
+	return;
+}
+
+void opf_read_capaData()
+{
+        register long i;
+        double mrnom;
+
+        struct capastr *cpp;
+        /////////////////////////////
+
+        capaData=NULL;
+        for(i=0;i<lv_cp;i++)
+        {
+                if((bs+(cp+i)->ibs)->iisland!=opf_island) continue;
+                if((cp+i)->topflags & CP_DEAD) continue;
+
+                if((cp+i)->q & CP_OPEN) continue;
+                if(!((cp+i)->q & CP_AVR)) continue;
+                ////////////////////////////////////////////////
+
+                cpp=(struct capastr *)malloc(sizeof(struct capastr));
+                if(cpp==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(cpp->descr,(cp+i)->descr);
+                strcpy(cpp->id,(cp+i)->id);
+
+                cpp->i  =(cp+i)->ibs;
+                cpp->Q0 =(cp+i)->r;
+
+                mrnom   =(cp+i)->mrnom;
+                if(mrnom>0.0)//capacitor
+                {
+                        cpp->Qmin=0.0;
+                        cpp->Qmax=mrnom;
+                }
+                else//reactor
+                {
+                        cpp->Qmin=mrnom;
+                        cpp->Qmax=0.0;
+                }//end if-else
+                ///////////////////////////////
+
+                cpp->next=capaData;
+                capaData=cpp;
+        }//end of for
+        /////////////////////////////////
+
+        turnOver(capaData);
+        return;
+}
+	
+void opf_read_groupData()
+{
+	register long i;
+
+	long j,k;
+	long ibs,zbs,kln,klnseg;
+
+	struct groupstr *grp;
+	/////////////////////////////////////
+
+	groupData=NULL;
+	for(i=0;i<lv_intrfc;i++)
+	{
+		//.1 memory allocation
+
+		grp=(struct groupstr *)malloc(sizeof(struct groupstr));
+                if(grp==NULL){ printf("\nError! --- %ld",__LINE__);  exit(0); }
+                /////////////////////////////////////////////////////
+
+		//.2 general data
+
+		strcpy(grp->id,(intrfc+i)->id);
+		strcpy(grp->descr,(intrfc+i)->descr);
+	      
+		grp->i       =i+1;//index
+		grp->imode   =0;//init.
+
+		grp->mwmin   =(intrfc+i)->mwmin;
+		grp->mwmax   =(intrfc+i)->mwmax;
+		
+		grp->lineNum =lineNumFun(oo_r_intrfc_lnseg,lv_oo_r_intrfc_lnseg,grp->id);
+		grp->modeNum =0;//No Change!
+ 
+		grp->w0	= 0.0;//init.
+		grp->r0	= 0.0;
+		grp->s0 = 0.0;
+		///////////////////////////////////////////////
+
+		//.3 lines of group
+
+		k=0;//init.
+                for(j=0;j<lv_oo_r_intrfc_lnseg;j++)
+                {
+			//.3.1 filtering records 
+
+			strcpy(idbuf,(oo_r_intrfc_lnseg+j)->intrfc_id);
+			if(strcmp(idbuf,grp->id)) continue;
+			/////////////////////////////////////////////////
+		
+			//.3.2 positioning lnseg/ln records
+	
+			klnseg=posiRecord(lnseg,(oo_r_intrfc_lnseg+j)->lnseg_id,(long)lv_lnseg);
+			if(klnseg==NO){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+			kln=posiRecord(ln,(lnseg+klnseg)->ln,(long)lv_ln);
+			if(kln==NO){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+			ibs=(ln+kln)->ibs;
+			zbs=(ln+kln)->zbs;
+			////////////////////////////////////////////////
+
+			//.3.3 constructing grp.line
+
+			k++;//index for grp.line
+
+			strcpy(grp->line[k].mst,(lnseg+klnseg)->st);
+			strcpy(grp->line[k].id,(lnseg+klnseg)->ln);
+
+			grp->line[k].i=ibs;
+                        grp->line[k].j=zbs;
+
+                        grp->line[k].imst=ibs;//default
+                        if(!strcmp(grp->line[k].mst,(ln+kln)->zst)) grp->line[k].imst=zbs;
+                }//end for
+
+		if(k!=grp->lineNum){ printf("\nError! --- %ld",__LINE__); exit(0); }
+                //////////////////////////////////////////
+
+		//.4 chain increase
+
+              	grp->next=groupData;
+                groupData=grp;
+	}//end for
+	//////////////////////////////////
+
+	turnOver(groupData);
+	return;
+}
+
+void opf_read_taptyData()
+{
+	register long i;
+	struct taptystr *tp;
+	//////////////////////////////////
+	
+	taptyData=NULL;
+	for(i=0;i<lv_tapty;i++)
+	{
+		tp=(struct taptystr *)malloc(sizeof(struct taptystr));
+		if(tp==NULL){ printf("\nError! --- %ld",__LINE__);  exit(0); }
+		//////////////////////////////////////////////
+
+		strcpy(tp->descr,"");
+		strcpy(tp->id,(tapty+i)->id);
+
+		tp->mntap=(tapty+i)->mn;
+		tp->mxtap=(tapty+i)->mx;
+
+		tp->nom =(tapty+i)->nom;
+		tp->step=(tapty+i)->step;	
+		///////////////////////////////////
+
+		tp->next=taptyData;
+		taptyData=tp;
+	}//end for
+	///////////////////////////////
+
+	turnOver(taptyData);
+	return;
+}
+
+void opf_oodbclose()
+{
+	oodbclose("psbob",sys_name,bob_name,real_srv,psbob_db_descr);
+	oodbclose("opfdb",sys_name,bob_name,real_srv,opfdb_db_descr);
+
+	free(psbob_db_descr);
+	free(opfdb_db_descr);
+
+	free(bs_descr); 	free(bs);
+	free(cp_descr); 	free(cp);
+	free(intrfc_descr);	free(intrfc);
+	free(ld_descr); 	free(ld);
+        free(ln_descr);		free(ln);
+	free(lnseg_descr);	free(lnseg);
+	free(opf_global_descr);	free(opf_global);
+	free(tapty_descr); 	free(tapty);
+	free(un_descr); 	free(un);
+	free(xf_descr); 	free(xf);
+
+	free(oo_r_intrfc_lnseg_descr);
+	free(oo_r_intrfc_lnseg);
+	//////////////////////////////////////////////
+
+        free(capainc_descr); 
+        free(flow_vio_descr);
+        free(flow_vio2_descr);
+        free(uninc_descr);
+        free(xfmrinc_descr);
+
+        free(flow_mon_descr);   free(flow_mon);
+        free(volt_descr);       free(volt);
+
+        free(stat_info_descr);
+        free(sys_state_descr);
+	//////////////////////////////////////////
+	
+	return;
+}
+
+double getPowr(PRIC *pric,long k)
+{
+        double ret;
+
+        switch(k)
+        {
+        case 1:
+                ret=pric->p1;
+                break;
+        case 2:
+                ret=pric->p2;
+                break;
+        case 3:
+                ret=pric->p3;
+                break;
+        case 4:
+                ret=pric->p4;
+                break;
+        case 5:
+                ret=pric->p5;
+                break;
+        case 6:
+                ret=pric->p6;
+                break;
+        case 7:
+                ret=pric->p7;
+                break;
+        case 8:
+                ret=pric->p8;
+                break;
+        case 9:
+                ret=pric->p9;
+                break;
+	default:
+		printf("\n\nError! --- %ld",__LINE__);
+		printf("\n  id=%s, k=%ld",pric->id,k); exit(0);
+	}//end switch
+
+	return ret;
+}
+
+double getPric(PRIC *pric,long k)
+{
+        double ret;
+
+        switch(k)
+        {
+        case 1:
+                ret=pric->c1;
+                break;
+        case 2:
+                ret=pric->c2;
+                break;
+        case 3:
+                ret=pric->c3;
+                break;
+        case 4:
+                ret=pric->c4;
+                break;
+        case 5:
+                ret=pric->c5;
+                break;
+        case 6:
+                ret=pric->c6;
+                break;
+        case 7:
+                ret=pric->c7;
+                break;
+        case 8:
+                ret=pric->c8;
+                break;
+        case 9:
+                ret=pric->c9;
+                break;
+	default:
+                printf("\n\nError! --- %ld",__LINE__);
+                printf("\n  id=%s, k=%ld",pric->id,k); exit(0); 
+        }//end switch
+
+        return ret;
+}
+
+long lineNumFun(OO_R_INTRFC_LNSEG *oo_r_intrfc_lnseg,long lv_oo_r_intrfc_lnseg,char *intrfc_id)
+{
+	register long i;
+	long ret=0;//init.
+
+	packString(intrfc_id);
+	for(i=0;i<lv_oo_r_intrfc_lnseg;i++)
+	{
+		strcpy(idbuf2,(oo_r_intrfc_lnseg+i)->intrfc_id);
+		packString(idbuf2);
+		
+		if(!strcmp(idbuf2,intrfc_id)) ret++;
+	}//end for
+	///////////////////////////////////
+
+	return ret;
+}
+
+//end of file

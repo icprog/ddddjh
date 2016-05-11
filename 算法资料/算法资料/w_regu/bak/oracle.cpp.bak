@@ -1,0 +1,383 @@
+//tpsec_dbfun.cpp by Wang GT, 2003/08/04
+////////////////////////////////////////////////////
+
+#include"common.h"
+#include"ociserve.h"
+
+#include"tpsec.h"
+#include"tpsec_db.h"
+#include"tpsec_global.h"
+////////////////////////////////////////////////////////
+
+void consoleMsg(char *msg)
+{
+	printf("%s",msg);
+	return;
+}
+
+void consoleMsg(char *prog_id,char *msg)
+{
+        consoleMsg(prog_id,"",msg,"");
+        return;
+}
+
+void consoleMsg(char *prog_id,char *prog_descr,char *msg,char *msg_xpln)
+{
+        //1: crr.date/time and conn. to server
+
+        date(crrdate,"mm/dd/yyyy");
+        wtime(crrtime);
+
+        year = date_year(crrdate,"mm/dd/yyyy");
+        month= date_month(crrdate,"mm/dd/yyyy");
+        day  = date_day(crrdate,"mm/dd/yyyy");
+        ////////////////////////////////////////////////
+
+        if(getenv("ORACLE_SID")==NULL)
+        {
+                printf("\n\nError! --- %ld",__LINE__);
+                printf("\n  Env. variable of ORACLE_SID not defined.\n");
+
+                exit(0);
+        }//end if
+
+        strcpy(oraServer,getenv("ORACLE_SID"));
+        conn_oraServer(oraServer,NO);//prnt
+        //////////////////////////////////////////////////////
+
+        //2: deleting records
+
+        sprintf(cmdbuf,"delete trade%ld.T_PROGRAMEXECINFO where PROGRAM_ID='%s' and M_DATE='%s' and M_TIME='%s'",year,prog_id,crrdate,crrtime);
+
+        ret=ociTools.ORA_BindNoReturn(cmdbuf);
+        if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+        ////////////////////////////////////////////////////////////
+        //3: inserting msg. record
+
+        sprintf(cmdbuf,"insert into trade%ld.T_PROGRAMEXECINFO (PROGRAM_ID,PROGRAM_NAME,M_DATE,M_TIME,RESULT,INFORMATION) VALUES('%s','%s','%s','%s','%s','%s')",year,prog_id,prog_descr,crrdate,crrtime,msg,msg_xpln);
+
+        ret=ociTools.ORA_BindNoReturn(cmdbuf);
+        if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+        /////////////////////////////////////////////////////////
+
+        //4: dis.connect
+
+        disconn_oraServer();
+        return;
+}
+
+void tpsec_writeDB(char *date,struct secstr *secData,long prnt)
+{
+	if(prnt==YES) printf("\n\ntpsec_writeDB()...");
+	if(prnt==YES) printf("\n Involved tables: REGIONPARTITION");
+
+	register long i,j;
+	long sum_mbrNum;
+
+	char mbr_descr[DESCRLN];  
+	char mbr_id[IDLN];
+	
+	long type;
+	char type_descr[DESCRLN];
+
+	struct mbrstr *mp;
+	struct secstr *sp;
+	////////////////////////////////////////////////////////
+
+	//1: connecting ora.server and the date
+
+        conn_oraServer("ora8irta",NO);//prnt
+        if(prnt==YES) printf("\n conn_oraServer() ok");
+
+        year = date_year(date,"mm/dd/yyyy");
+        month= date_month(date,"mm/dd/yyyy");
+        day  = date_day(date,"mm/dd/yyyy");
+
+        if(prnt==YES) printf("\n year = %ld",year);
+        if(prnt==YES) printf("\n month= %ld",month);
+        if(prnt==YES) printf("\n day  = %ld",day);
+        ////////////////////////////////////////////////////////
+
+	//2: deleting records of the date
+
+	sprintf(cmdbuf,"delete trade%ld.T_REGIONPARTITION where M_DATE='%s'",year,date);
+
+	ret=ociTools.ORA_BindNoReturn(cmdbuf);
+        if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+	if(prnt==YES) printf("\n table cleared");
+	/////////////////////////////////////////////////////////
+
+	//3: inserting new records
+
+	sum_mbrNum=0;//init.
+	sp=secData;
+
+	for(i=1;i<=secNum;i++,sp=sp->next)
+	{
+		if(prnt==YES) printf("\n\n i=%ld: sec_id=%s, descr=%s",i,sp->id,sp->descr);
+
+		if(prnt==YES) printf("\n mbrNum=%ld",sp->mbrNum);
+		if(sp->mbrNum==0) continue;
+		////////////////////////////////////////////////
+
+		sum_mbrNum+= sp->mbrNum;
+		mp=sp->mbrData;
+		
+		for(j=1;j<=sp->mbrNum;j++,mp=mp->next)
+		{
+			//.1 info. of a member
+
+			strcpy(mbr_descr,mp->descr);
+			strcpy(mbr_id,mp->id);
+			
+			strcpy(type_descr,mp->type_descr);
+			/////////////////////////////////////////////////
+
+			//.2 inserting a record
+
+			sprintf(cmdbuf,"insert into trade%ld.T_REGIONPARTITION (M_DATE,REGION_ID,REGION_NAME,MEMBER_ID,MEMBER_NAME,MEMBER_TYPE) values ('%s','%s','%s','%s','%s','%s')",year,date,sp->id,sp->descr,mbr_id,mbr_descr,type_descr);
+
+			//if(prnt==YES) printf("\n cmdbuf=%s",cmdbuf);
+	
+			ret=ociTools.ORA_BindNoReturn(cmdbuf);
+                	if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+		}//end for
+	}//end for
+
+	if(prnt==YES) printf("\n %ld records inserted",sum_mbrNum);	
+	//////////////////////////////////////////////////////////////////
+
+	//4: oci.disconnect
+
+        disconn_oraServer();
+        if(prnt==YES) printf("\n disconn_oraServer() ok");
+	
+	return;
+}
+
+void tpsec_readDB(char *date,long prnt)
+{
+	if(prnt==YES) printf("\n\ntpsec_readDB()...");
+	if(prnt==YES) printf("\n Involved tables: REGIONCODING/TIELINE");
+
+	register long i,j;
+	long groupNum,lineNum;
+
+	struct linestr *lp,*lineData;
+	struct secstr *sp;
+	//////////////////////////////////////////////////////
+
+        //1: connecting to oraServer
+
+	if(getenv("ORACLE_SID")==NULL)
+	{
+		printf("\n\nError! --- %ld",__LINE__);
+		printf("\n  Env. variable of ORACLE_SID is not defined");
+
+		exit(0);
+	}//end if
+	
+	strcpy(oraServer,getenv("ORACLE_SID"));
+	if(prnt==YES) printf("\n oraServer=%s",oraServer);	
+
+        conn_oraServer(oraServer,NO);//prnt
+        if(prnt==YES) printf("\n conn_oraServer() ok");
+	//////////////////////////////////////////////////////
+
+	//1.2 cal. year/month/day of date
+
+        year  = date_year(date,"mm/dd/yyyy");
+        month = date_month(date,"mm/dd/yyyy");
+        day   = date_day(date,"mm/dd/yyyy");
+
+        if(prnt==YES) printf("\n year = %ld",year);
+        if(prnt==YES) printf("\n month= %ld",month);
+        if(prnt==YES) printf("\n day  = %ld",day);
+        /////////////////////////////////////////////////////////
+
+	//2: reading id/descr of sections
+
+	sprintf(cmdbuf,"select REGION_NAME,REGION_ID from trade%d.T_REGIONCODING where M_DATE='%s' and YES_NO=1",year,date);
+	//if(prnt==YES) printf("\n cmdbuf=%s",cmdbuf);
+
+        ret=ociTools.ORA_BindWithReturnArray(cmdbuf,(void *)strbuf);
+        if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+	
+	recNum=ret;//No Change!
+	secNum=ret;
+
+	if(prnt==YES) printf("\n secNum=%ld",secNum);
+	////////////////////////////////////////////////////////
+
+	//3: creating chain of secData 
+
+	secData=NULL;//init
+	for(i=0;i<recNum;i++)
+	{
+		sp=(struct secstr *)malloc(sizeof(struct secstr));
+		if(sp==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+		memset(sp,0,sizeof(struct secstr));
+	
+		strcpy(sp->descr,strbuf[i]);
+		strcpy(sp->id,strbuf[i+recNum]);
+		
+		sp->next=secData;
+		secData=sp;			
+	}//end for
+
+	turnOver(secData);//No Change!
+	if(prnt==YES) printf("\n secData created");
+	/////////////////////////////////////////////////////////
+
+	//4: reading st_id/descr of each sec.
+
+	sp=secData;
+	for(i=0;i<secNum;i++,sp=sp->next)
+	{
+		sprintf(cmdbuf,"select MEMBER_NAME,MEMBER_ID from trade%d.T_REGIONCODING where M_DATE='%s' and REGION_ID='%s'",year,date,sp->id);
+
+		ret=ociTools.ORA_BindWithReturnArray(cmdbuf,(void *)strbuf);
+		if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+		strcpy(sp->st_descr,strbuf[0]);
+		strcpy(sp->st_id,strbuf[1]);
+	}//end for
+
+	if(prnt==YES) printf("\n sec. st_id/descr ok");
+	//////////////////////////////////////////////////////////
+
+	//5: reading lineData of each sec.
+
+	sp=secData;
+	for(i=0;i<secNum;i++,sp=sp->next)
+	{
+		if(prnt==YES) drawline(66);
+		if(prnt==YES) printf("\n\n i=%ld: sec_id=%s, descr=%s",i,sp->id,sp->descr);
+
+		//.1 reading groups of each section
+
+		sprintf(cmdbuf,"select TIE_LINE_ID from trade%d.T_REGIONTIELINE where REGION_ID='%s'",year,sp->id);
+		ret=ociTools.ORA_BindWithReturnArray(cmdbuf,(void *)strbuf);
+		if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+		groupNum=ret;
+		if(prnt==YES) printf("\n groupNum=%ld",groupNum);
+		///////////////////////////////////////////////////
+
+		//.2 creating chain of lineData
+
+		lineData=NULL;//init.
+		for(j=0;j<groupNum;j++)
+			append_grpLineData(lineData,strbuf[j],NO);//prnt
+
+		turnOver(lineData);
+		if(prnt==YES) printf("\n lineData created");
+		//////////////////////////////////////////////////////
+
+		//.3 saving lineData 
+
+		sp->lineData=lineData;
+		sp->lineNum =chainLen(lineData);	
+	
+		if(prnt==YES) printf("\n lineNum = %ld",sp->lineNum);
+	}//end for
+
+	if(prnt==YES) printf("\n sec.lineData ok");
+	//////////////////////////////////////////////////////////
+
+	//6: oci.disconnect
+
+        disconn_oraServer();
+        if(prnt==YES) printf("\n disconn_oraServer() ok");
+
+	return;
+}
+
+void append_grpLineData(struct linestr *&lineData,char *group_id,long prnt)
+{
+        if(prnt==YES) printf("\n\nappend_grpLineData()...");
+	if(prnt==YES) printf("\n Involved tables: TIELINECODING, group_id=%s",group_id);
+
+	register long i;
+	long grpLineNum;
+	
+	struct linestr *lp;
+	////////////////////////////////////////////////////////////
+
+	//1: reading lines of group_id ---> strbuf2[]
+
+	sprintf(cmdbuf,"select LINE_NAME,LINE_ID from trade%d.T_TIELINECODING where GROUP_ID='%s'",year,group_id);
+	//if(prnt==YES) printf("\n cmdbuf=%s",cmdbuf);
+	
+	ret=ociTools.ORA_BindWithReturnArray(cmdbuf,(void *)strbuf2);//No Change!
+        if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+	
+	recNum    =ret;//No Change!
+	grpLineNum=ret;
+
+	if(prnt==YES) printf("\n grpLineNum=%ld",grpLineNum);
+	///////////////////////////////////////////////////////////
+
+	//2: increasing chain of lineData
+
+	for(i=0;i<grpLineNum;i++)
+        {
+                lp=(struct linestr *)malloc(sizeof(linestr));
+                if(lp==NULL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+                strcpy(lp->descr,strbuf2[i]);
+                strcpy(lp->id,strbuf2[i+recNum]);
+
+                lp->next=lineData;
+                lineData=lp;
+	}//end for
+	
+	if(prnt==YES) printf("\n lineData increased");
+	///////////////////////////////////////////////////////
+
+	return;
+}
+
+void conn_oraServer(char *_oraServer,long prnt)
+{
+        if(prnt==YES) printf("\n\nconn_oraServer()...");
+
+        //1: init. environmental variables
+
+        strcpy(userName,"system");//No Change!
+        strcpy(passWord,"manager");
+        strcpy(oraServer,_oraServer);
+
+        if(prnt==YES) printf("\n userName = %s",userName);
+        if(prnt==YES) printf("\n passWord = %s",passWord);
+        if(prnt==YES) printf("\n oraServer= %s",oraServer);
+        ///////////////////////////////////////////////////////
+
+        //2: oci.connect
+
+        int ret=ociTools.Connect(userName,passWord,oraServer);
+        if(ret==OCI_FAIL)
+        {
+                printf("\n\nError! --- %ld",__LINE__);
+                printf("\n  Cannot connect to ora.Server\n");
+
+                exit(0);
+        }//end if
+
+        if(prnt==YES) printf("\n oci.Connect() ok");
+        ////////////////////////////////////////////////////
+
+        return;
+}
+
+void disconn_oraServer()
+{
+        int ret=ociTools.Disconnect();
+        if(ret==OCI_FAIL){ printf("\nError! --- %ld",__LINE__); exit(0); }
+
+        return;
+}
+
+//end of file
